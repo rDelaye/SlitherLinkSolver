@@ -1,15 +1,18 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package main;
 
-/**
- *
- * @author Robin
- */
+import org.chocosolver.solver.Model;
+import org.chocosolver.solver.variables.BoolVar;
+
 public class main
 {
-    
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        SlitherLink problem = new SlitherLink(7, 6, 4);
+        Model model = new Model("SlitherLink feasbility problem");
+        BoolVar[] vars = new BoolVar[problem.getX()*(problem.getY()+1) + problem.getY()*(problem.getX()+1)];
+        
+        System.out.println(problem);
+    }
 }
