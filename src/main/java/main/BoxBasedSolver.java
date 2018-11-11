@@ -19,12 +19,12 @@ import org.chocosolver.solver.variables.IntVar;
  * @author Robin
  */
 public class BoxBasedSolver
-{
-    private static List<List<Integer>> grid;
-    private static int[] premier = new int[]{2,3,5,7};
-    private static List<int[]> domains = new ArrayList<>();
-    
-    public static void createBoxBasedSolver()
+{    
+    private  int[] premier = new int[]{2,3,5,7};
+    private  List<int[]> domains = new ArrayList<>();
+    private Solution sol;
+    private SlitherLink sl;
+    public BoxBasedSolver(SlitherLink sl)
     {
         //Create possible domains
         domains.add(new int[]{-1}); // 0 line can be drawn
@@ -32,35 +32,7 @@ public class BoxBasedSolver
         domains.add(new int[]{6,10,14,15,21,35});// 2 line can be drawn
         domains.add(new int[]{30, 42, 70, 105});// 3 line can be drawn
         domains.add(new int[]{-1,2,3,5,7,6,10,14,15,21,35,30,42,70,105}); // 0 or 1 or 2 or 3 line can be drawn
-        
-        
-        //Create a grid for testing
-        grid = new ArrayList<>();
-        List<Integer> l1 = new ArrayList<>();
-        List<Integer> l2 = new ArrayList<>();
-        List<Integer> l3 = new ArrayList<>();
-        List<Integer> l4 = new ArrayList<>();
-        
-        l1.add(-1);
-        l1.add(-1);
-        l1.add(1);
-        l1.add(0);
-        l2.add(-1);
-        l2.add(-1);
-        l2.add(-1);
-        l2.add(2);
-        l3.add(1);
-        l3.add(3);
-        l3.add(-1);
-        l3.add(-1);
-        l4.add(-1);
-        l4.add(-1);
-        l4.add(-1);
-        l4.add(1);
-        grid.add(l1);
-        grid.add(l2);
-        grid.add(l3);
-        grid.add(l4);
+        this.sl = sl;
         
         
     }
@@ -68,19 +40,20 @@ public class BoxBasedSolver
     
     
     
-    public static Solution solve()
+    public Solution solve()
     {
+        int[][] grid = sl.getCells();
         Model model = new Model("Box-Based SlitherLink Solver");
         //Add all var with their domain. Their domain correspond to an array of value depending of thenumber inscribed at the same position on the grid to solve.
-        IntVar[][] vars = new IntVar[grid.size()][grid.get(0).size()];        
-        for(int i = 0; i < grid.size(); i++)
+        IntVar[][] vars = new IntVar[sl.getX()][sl.getY()];        
+        for(int i = 0; i < sl.getX(); i++)
         {
-            for(int j = 0; j < grid.get(i).size(); j++)
+            for(int j = 0; j < sl.getY(); j++)
             {
-                if(grid.get(i).get(j) == -1)
+                if(grid[i][j] == Integer.MIN_VALUE)
                     vars[i][j] = model.intVar("B"+i+","+j, domains.get(4));
                 else
-                    vars[i][j] = model.intVar("B"+i+","+j, domains.get(grid.get(i).get(j)));
+                    vars[i][j] = model.intVar("B"+i+","+j, domains.get(grid[i][j]));
             }
         }
         
@@ -93,9 +66,9 @@ public class BoxBasedSolver
         //Creation "loop" constraints
         //Créer des contraintes pour chaque cases
         
-        for(int i = 0; i < grid.size(); i++)
+        for(int i = 0; i < sl.getX(); i++)
         {
-            for(int j = 0; j < grid.get(i).size(); j++)
+            for(int j = 0; j < sl.getY(); j++)
             {
                 //LIGNE DU HAUT
                 //SI ligne en haut de la case, alors "Y a-t-il une et une seule ligne adjacente a gauche" ET "Y a-t-il une et une seule ligne adjacente a droite" (Représenté par SUM(BoolVar des constraints)
@@ -106,21 +79,21 @@ public class BoxBasedSolver
                     model.ifThen(model.mod(vars[i][j], v5, v0), model.and(model.sum(new BoolVar[]{model.mod(vars[i + 1][j], v7, v0).reify(), model.mod(vars[i][j], v7, v0).reify()}, "=", 1), model.sum(new BoolVar[]{model.mod(vars[i][j + 1], v5, v0).reify(), model.mod(vars[i+1][j], v3, v0).reify(), model.mod(vars[i][j], v3, v0).reify()}, "=", 1)));     
                     model.ifThen(model.mod(vars[i][j], v7, v0), model.and(model.mod(vars[i][j], v2, v0), model.sum(new BoolVar[]{model.mod(vars[i][j], v5, v0).reify(), model.mod(vars[i +1 ][j], v7, v0).reify()}, "=", 1)));     
                 }
-                else if(i == grid.size() - 1 && j == 0)
+                else if(i == sl.getX() - 1 && j == 0)
                 {
                     model.ifThen(model.mod(vars[i][j], v2, v0), model.and(model.sum(new BoolVar[]{model.mod(vars[i-1][j], v7, v0).reify(), model.mod(vars[i][j], v7, v0).reify()}, "=", 1), model.sum(new BoolVar[]{model.mod(vars[i-1][j], v3, v0).reify(), model.mod(vars[i][j+1], v2, v0).reify()}, "=", 1)));     
                     model.ifThen(model.mod(vars[i][j], v3, v0), model.and(model.sum(new BoolVar[]{model.mod(vars[i][j], v5, v0).reify(), model.mod(vars[i][j+1], v5, v0).reify()}, "=", 1), model.sum(new BoolVar[]{model.mod(vars[i][j], v2, v0).reify(), model.mod(vars[i][j+1], v2, v0).reify(), model.mod(vars[i-1][j], v3, v0).reify()}, "=", 1)));     
                     model.ifThen(model.mod(vars[i][j], v5, v0), model.and(model.mod(vars[i][j], v7, v0), model.sum(new BoolVar[]{model.mod(vars[i][j+1], v5, v0).reify(), model.mod(vars[i][j], v3, v0).reify()}, "=", 1)));     
                     model.ifThen(model.mod(vars[i][j], v7, v0), model.and(model.mod(vars[i][j], v5, v0), model.sum(new BoolVar[]{model.mod(vars[i][j], v2, v0).reify(), model.mod(vars[i-1][j], v7, v0).reify()}, "=", 1)));
                 }
-                else if(i == 0 && j == grid.get(0).size() - 1)
+                else if(i == 0 && j == sl.getY() - 1)
                 {
                     model.ifThen(model.mod(vars[i][j], v2, v0), model.and(model.mod(vars[i][j], v3, v0), model.sum(new BoolVar[]{model.mod(vars[i][j-1], v2, v0).reify(), model.mod(vars[i][j], v7, v0).reify()}, "=", 1)));     
                     model.ifThen(model.mod(vars[i][j], v3, v0), model.and(model.mod(vars[i][j], v2, v0), model.sum(new BoolVar[]{model.mod(vars[i][j], v5, v0).reify(), model.mod(vars[i+1][j], v3, v0).reify()}, "=", 1)));     
                     model.ifThen(model.mod(vars[i][j], v5, v0), model.and(model.sum(new BoolVar[]{model.mod(vars[i][j-1], v5, v0).reify(), model.mod(vars[i][j], v7, v0).reify(), model.mod(vars[i+1][j], v7, v0).reify()}, "=", 1), model.sum(new BoolVar[]{model.mod(vars[i+1][j], v3, v0).reify(), model.mod(vars[i][j], v3, v0).reify()}, "=", 1)));     
                     model.ifThen(model.mod(vars[i][j], v7, v0), model.and(model.sum(new BoolVar[]{model.mod(vars[i][j], v2, v0).reify(), model.mod(vars[i][j-1], v2, v0).reify()}, "=", 1), model.sum(new BoolVar[]{model.mod(vars[i][j], v5, v0).reify(), model.mod(vars[i][j-1], v5, v0).reify(), model.mod(vars[i+1][j], v7, v0).reify()}, "=", 1)));                                                             
                 }
-                else if(i == grid.size() - 1&& j == grid.get(0).size() - 1)
+                else if(i == sl.getX() - 1&& j == sl.getY() - 1)
                 {
                     model.ifThen(model.mod(vars[i][j], v2, v0), model.and(model.sum(new BoolVar[]{model.mod(vars[i][j-1], v2, v0).reify(), model.mod(vars[i-1][j], v7, v0).reify(), model.mod(vars[i][j], v7, v0).reify()}, "=", 1), model.sum(new BoolVar[]{model.mod(vars[i-1][j], v3, v0).reify(), model.mod(vars[i][j], v3, v0).reify()}, "=", 1)));     
                     model.ifThen(model.mod(vars[i][j], v3, v0), model.and(model.sum(new BoolVar[]{model.mod(vars[i][j], v2, v0).reify(), model.mod(vars[i-1][j], v3, v0).reify()}, "=", 1), model.mod(vars[i][j], v5, v0)));     
@@ -134,7 +107,7 @@ public class BoxBasedSolver
                     model.ifThen(model.mod(vars[i][j], v5, v0), model.and(model.sum(new BoolVar[]{model.mod(vars[i][j+1], v5, v0).reify(), model.mod(vars[i][j], v3, v0).reify(), model.mod(vars[i+1][j], v3, v0).reify()}, "=", 1), model.sum(new BoolVar[]{model.mod(vars[i+1][j], v7, v0).reify(), model.mod(vars[i][j], v7, v0).reify(), model.mod(vars[i][j-1], v5, v0).reify()}, "=", 1)));     
                     model.ifThen(model.mod(vars[i][j], v7, v0), model.and(model.sum(new BoolVar[]{model.mod(vars[i][j], v2, v0).reify(), model.mod(vars[i][j-1], v2, v0).reify()}, "=", 1), model.sum(new BoolVar[]{model.mod(vars[i][j], v5, v0).reify(), model.mod(vars[i+1][j], v7, v0).reify(), model.mod(vars[i][j-1], v5, v0).reify()}, "=", 1)));                                                             
                 } 
-                else if(i == grid.size() - 1)
+                else if(i == sl.getX() - 1)
                 {
                     model.ifThen(model.mod(vars[i][j], v2, v0), model.and(model.sum(new BoolVar[]{model.mod(vars[i-1][j], v7, v0).reify(), model.mod(vars[i][j-1], v2, v0).reify(), model.mod(vars[i][j], v7, v0).reify()}, "=", 1), model.sum(new BoolVar[]{model.mod(vars[i-1][j], v3, v0).reify(), model.mod(vars[i][j + 1], v2, v0).reify(), model.mod(vars[i][j], v3, v0).reify()}, "=", 1)));     
                     model.ifThen(model.mod(vars[i][j], v3, v0), model.and(model.sum(new BoolVar[]{model.mod(vars[i][j], v5, v0).reify(), model.mod(vars[i][j+1], v5, v0).reify()}, "=", 1), model.sum(new BoolVar[]{model.mod(vars[i][j], v2, v0).reify(), model.mod(vars[i][j+1], v2, v0).reify(), model.mod(vars[i-1][j], v3, v0).reify()}, "=", 1)));     
@@ -148,7 +121,7 @@ public class BoxBasedSolver
                     model.ifThen(model.mod(vars[i][j], v5, v0), model.and(model.sum(new BoolVar[]{model.mod(vars[i][j], v7, v0).reify(), model.mod(vars[i+1][j], v7, v0).reify()}, "=", 1), model.sum(new BoolVar[]{model.mod(vars[i][j+1], v5, v0).reify(), model.mod(vars[i+1][j], v3, v0).reify(), model.mod(vars[i][j], v3, v0).reify()}, "=", 1)));     
                     model.ifThen(model.mod(vars[i][j], v7, v0), model.and(model.sum(new BoolVar[]{model.mod(vars[i][j], v2, v0).reify(), model.mod(vars[i-1][j], v7, v0).reify()}, "=", 1), model.sum(new BoolVar[]{model.mod(vars[i][j], v5, v0).reify(), model.mod(vars[i+1][j], v7, v0).reify()}, "=", 1)));                                                                                 
                 }
-                else if(j == grid.get(0).size() - 1)
+                else if(j == sl.getY() - 1)
                 {
                     model.ifThen(model.mod(vars[i][j], v2, v0), model.and(model.sum(new BoolVar[]{model.mod(vars[i][j-1], v2, v0).reify(), model.mod(vars[i-1][j], v7, v0).reify(), model.mod(vars[i][j], v7, v0).reify()}, "=", 1), model.sum(new BoolVar[]{model.mod(vars[i-1][j], v3, v0).reify(), model.mod(vars[i][j], v3, v0).reify()}, "=", 1)));     
                     model.ifThen(model.mod(vars[i][j], v3, v0), model.and(model.sum(new BoolVar[]{model.mod(vars[i][j], v2, v0).reify(), model.mod(vars[i-1][j], v3, v0).reify()}, "=", 1), model.sum(new BoolVar[]{model.mod(vars[i][j], v5, v0).reify(), model.mod(vars[i+1][j], v3, v0).reify()}, "=", 1)));     
@@ -165,15 +138,15 @@ public class BoxBasedSolver
             }            
         }   
         
-        for(int i = 0; i < grid.size(); i++)
+        for(int i = 0; i < sl.getX(); i++)
         {
-            for(int j = 0; j < grid.get(i).size(); j++)
+            for(int j = 0; j < sl.getY(); j++)
             {
                 if(i != 0)
                 {
                     model.ifThen(model.mod(vars[i][j], v2, v0), model.mod(vars[i - 1][j], v5, v0));
                 }
-                if(i != grid.size() - 1)
+                if(i != sl.getX() - 1)
                 {
                     model.ifThen(model.mod(vars[i][j], v5, v0), model.mod(vars[i + 1][j], v2, v0));
                 }
@@ -181,7 +154,7 @@ public class BoxBasedSolver
                 {
                     model.ifThen(model.mod(vars[i][j], v7, v0), model.mod(vars[i][j - 1], v3, v0));
                 }
-                if(j != grid.get(0).size() - 1)
+                if(j != sl.getY() - 1)
                 {
                     model.ifThen(model.mod(vars[i][j], v3, v0), model.mod(vars[i][j + 1], v7, v0));
                 }
@@ -190,13 +163,13 @@ public class BoxBasedSolver
         
         
         
-        Solution sol = model.getSolver().findSolution();
+        sol = model.getSolver().findSolution();
         if(sol == null)
             System.out.println("NO SOL");
         else
-            for(int i = 0; i < grid.size(); i++)
+            for(int i = 0; i < sl.getX(); i++)
             {
-                for(int j = 0; j < grid.get(i).size(); j++)
+                for(int j = 0; j < sl.getY(); j++)
                 {
                     System.out.println("B" + i + ", " + j + ": " + sol.getIntVal(vars[i][j]));
                 }
