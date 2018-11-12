@@ -101,7 +101,6 @@ public class SlitherLink {
             {
                 String[] array2 = myLine.split(" ");
                 for (int i = 0; i < array2.length; i++){
-                    System.out.println(array2[i]);
                     if(!array2[i].equals(".")){
                         sl.cells[i][j] = Integer.parseInt(array2[i]);
                     }else{
@@ -121,6 +120,6 @@ public class SlitherLink {
                 Logger.getLogger(SlitherLink.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        return null;
+        return sl;
     }
 }

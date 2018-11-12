@@ -164,17 +164,17 @@ public class BoxBasedSolver
         
         
         sol = model.getSolver().findSolution();
-        if(sol == null)
+        /*if(sol == null)
             System.out.println("NO SOL");
         else
             for(int i = 0; i < sl.getX(); i++)
             {
                 for(int j = 0; j < sl.getY(); j++)
                 {
-                    System.out.println("B" + i + ", " + j + ": " + sol.getIntVal(vars[i][j]));
+                    //System.out.println("B" + i + ", " + j + ": " + sol.getIntVal(vars[i][j]));
                 }
             }
-        
+        */
         
         return sol;
     }
