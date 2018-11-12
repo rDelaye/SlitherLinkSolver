@@ -53,37 +53,23 @@ public class SATModel {
                 BoolVar y1 = variables[0][(i+1)*p.getY()+j];
                 switch(p.getCells()[i][j]) {
                     case 0:
-                        model.addClauseFalse(x0);
-                        model.addClauseFalse(x1);
-                        model.addClauseFalse(y0);
-                        model.addClauseFalse(y1);
+                        model.sum(new BoolVar[]{x0,x1,y0,y1}, "=", 0).post();
                         //System.out.println("adding 0 for "+i+","+j+": "+x0.getName()+","+x1.getName()+","+y0.getName()+","+y1.getName());
                         break;
                     case 1:
-                        model.addClauses(or(and(x0, nor(x1, y0, y1)), 
-                                            and(x1, nor(x0, y0, y1)),
-                                            and(y0, nor(x1, x0, y1)),
-                                            and(y1, nor(x1, y0, x0))));
+                        model.sum(new BoolVar[]{x0,x1,y0,y1}, "=", 1).post();
                         break;
                     case 2:
-                        model.addClauses(or(and(x0, x1, nor(y0, y1)),
-                                            and(x0, y0, nor(x1, y1)),
-                                            and(x0, y1, nor(x1, y0)),
-                                            and(x1, y0, nor(x0, y1)),
-                                            and(x1, y1, nor(y0, x0)),
-                                            and(y0, y1, nor(x0, x1))));
+                        model.sum(new BoolVar[]{x0,x1,y0,y1}, "=", 2).post();
                         break;
                     case 3:
-                        model.addClauses(or(and(x0, x1, y0, nor(y1)), 
-                                and(x0, x1, y1, nor(y0)),
-                                and(x0, y0, y1, nor(x1),
-                                and(x1, y0, y1, nor(x0)))));
+                        model.sum(new BoolVar[]{x0,x1,y0,y1}, "=", 3).post();
                         break;
                     default:
                         break;
                 }
             }
-            model.post();
+            //model.post();
         }
         
         // Adding constraint to check unique cycle:
@@ -137,7 +123,7 @@ public class SATModel {
                     System.out.println("lower middle, "+variables[0][i].getName()+": left={"+variables[0][i-1].getName()+", "+variables[1][maxLine+col].getName()+"}, right={"+variables[0][i+1].getName()+", "+variables[1][maxLine+col+1].getName()+"}");
                     model.ifThen(variables[0][i], model.and(model.sum(left, "=", model.intVar(1)), model.sum(right, "=", model.intVar(1))));
                 }
-            } else { // middle
+            } else { 
                 // left extremity
                 if(i%p.getY() == 0) {
                     int col = i%p.getY();
@@ -178,63 +164,62 @@ public class SATModel {
                 // upper extremity
                 if(i == 0) {
                     BoolVar[] up = {variables[0][0]};
-                    BoolVar[] down = {variables[0][p.getY()], variables[1][p.getY()+1]};
+                    BoolVar[] down = {variables[0][(line + 1)*p.getY()], variables[1][p.getY()+1]};
                     
-                    model.ifThen(variables[0][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
+                    model.ifThen(variables[1][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
                 }
                 else if (i == (p.getY()+1) * (p.getX()-1)) { // lower extremity
-                    BoolVar[] up = {variables[1][i-(p.getY()+1)], variables[0][(p.getX()-1) * p.getY()]};
+                    BoolVar[] up = {variables[1][i-(p.getY()+1)], variables[0][line * p.getX()]};
                     BoolVar[] down = {variables[0][p.getX() * p.getY()]};
                     
-                    model.ifThen(variables[0][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
+                    model.ifThen(variables[1][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
                 } else { // middle
-                    BoolVar[] up = {variables[1][i-(p.getY()+1)], variables[0][line * p.getY()]};
-                    BoolVar[] down = {variables[1][i+(p.getY()+1)]};
+                    BoolVar[] up = {variables[1][i-(p.getY()+1)], variables[0][line * p.getX()]};
+                    BoolVar[] down = {variables[1][i+(p.getY()+1)], variables[0][(line+1)*p.getX()]};
                     
-                    model.ifThen(variables[0][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
+                    model.ifThen(variables[1][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
                 }
             }
             else if(i%(p.getY()+1) == p.getY()) { // right edges
                 // upper extremity
                 if(i == p.getY()) {
-                    BoolVar[] up = {variables[0][p.getY()-1]};
-                    BoolVar[] down = {variables[1][i+p.getY()+1], variables[0][2*p.getY()-1]};
+                    BoolVar[] up = {variables[0][p.getX()-1]};
+                    BoolVar[] down = {variables[1][i+p.getY()+1], variables[0][2*p.getX()-1]};
                     
-                    model.ifThen(variables[0][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
+                    model.ifThen(variables[1][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
                 }
                 else if (i == variables[1].length-1) { // lower extremity
-                    int tmp = p.getY() * (p.getX()+1) - 1;
+                    int tmp = variables[0].length-1;
                     
-                    BoolVar[] up = {variables[1][i-(p.getY()+1)], variables[0][tmp-p.getY()]};
+                    BoolVar[] up = {variables[1][i-(p.getY()+1)], variables[0][tmp-p.getX()]};
                     BoolVar[] down = {variables[0][tmp]};
                     
-                    model.ifThen(variables[0][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
+                    model.ifThen(variables[1][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
                 } else { // middle
-                    BoolVar[] up = {variables[1][i-(p.getY()+1)], variables[0][line * p.getY() - 1]};
-                    BoolVar[] down = {variables[1][i+(p.getY()+1)], variables[0][(line+1) * p.getY() - 1]};
+                    BoolVar[] up = {variables[1][i-(p.getY()+1)], variables[0][(line + 1) * p.getX() - 1]};
+                    BoolVar[] down = {variables[1][i+(p.getY()+1)], variables[0][(line + 2) * p.getX() - 1]};
                     
-                    model.ifThen(variables[0][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
+                    model.ifThen(variables[1][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
                 }
             } else { // middle
                 // upper extremity
                 if(i < p.getY()) {
                     BoolVar[] up = {variables[0][i-1], variables[0][i]};
-                    BoolVar[] down = {variables[0][i+p.getY()], variables[0][i+p.getY()+1], variables[1][i+p.getY()+1]};
+                    BoolVar[] down = {variables[0][i+p.getX()], variables[0][i+p.getX()-1], variables[1][i+p.getY()+1]};
                     
-                    model.ifThen(variables[0][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
+                    model.ifThen(variables[1][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
                 }
                 else if(i > (p.getY()+1)*(p.getX()-1)) { // lower extremity
-                    int tmp = p.getY() * p.getX() + col;
-                    BoolVar[] up = {variables[0][tmp], variables[0][tmp-1], variables[1][i - (p.getY()+1)]};
-                    BoolVar[] down = {variables[0][tmp-p.getY()], variables[0][tmp-p.getY()-1]};
+                    BoolVar[] up = {variables[0][i - p.getX()], variables[0][i + 1 - p.getX()], variables[1][i - (p.getY()+1)]};
+                    BoolVar[] down = {variables[0][i], variables[0][i+1]};
                     
-                    model.ifThen(variables[0][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
+                    model.ifThen(variables[1][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
                 } else { // middle
-                    int tmp = p.getY() * p.getX() + col;
+                    int tmp = line * p.getX() + col;
                     BoolVar[] up = {variables[0][tmp], variables[0][tmp-1], variables[1][i - (p.getY()+1)]};
-                    BoolVar[] down = {variables[0][tmp-p.getY()], variables[0][tmp-p.getY()-1], variables[1][i + (p.getY()+1)]};
+                    BoolVar[] down = {variables[0][tmp+p.getX()], variables[0][tmp+p.getX()-1], variables[1][i + (p.getY()+1)]};
                     
-                    model.ifThen(variables[0][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
+                    model.ifThen(variables[1][i], model.and(model.sum(up, "=", model.intVar(1)), model.sum(down, "=", model.intVar(1))));
                 }
             }
         }

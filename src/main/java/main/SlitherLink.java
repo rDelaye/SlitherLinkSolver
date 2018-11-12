@@ -93,8 +93,8 @@ public class SlitherLink {
             String myLine = null;
             myLine = bufRead.readLine();
             String[] dims = myLine.split(" ");
-            sl.X = Integer.parseInt(dims[1]);
-            sl.Y = Integer.parseInt(dims[0]);
+            sl.X = Integer.parseInt(dims[0]);
+            sl.Y = Integer.parseInt(dims[1]);
             sl.cells = new int[sl.X][sl.Y];
             int j = 0;
             while ( (myLine = bufRead.readLine()) != null)
@@ -103,9 +103,9 @@ public class SlitherLink {
                 for (int i = 0; i < array2.length; i++){
                     System.out.println(array2[i]);
                     if(!array2[i].equals(".")){
-                        sl.cells[i][j] = Integer.parseInt(array2[i]);
+                        sl.cells[j][i] = Integer.parseInt(array2[i]);
                     }else{
-                        sl.cells[i][j] = Integer.MIN_VALUE;
+                        sl.cells[j][i] = Integer.MIN_VALUE;
                     }
                 }
                 j++;
@@ -121,6 +121,6 @@ public class SlitherLink {
                 Logger.getLogger(SlitherLink.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        return null;
+        return sl;
     }
 }
