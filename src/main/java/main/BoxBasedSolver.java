@@ -175,7 +175,8 @@ public class BoxBasedSolver
                 varsFlattened[i*sl.getX() + j] = vars[i][j];
             }
         }
-        //model.getSolver().setSearch(Search.intVarSearch(new FirstFail(model), new IntDomainMin(),varsFlattened));
+        model.getSolver().setSearch(Search.intVarSearch(new FirstFail(model), new IntDomainMax(),varsFlattened));
+        System.out.println(model.getCstrs().length);
         sol = model.getSolver().findSolution();
         
         
