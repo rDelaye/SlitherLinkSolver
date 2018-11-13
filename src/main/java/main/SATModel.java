@@ -22,9 +22,9 @@ public class SATModel {
         // Initiate variables (one for each edge)
         BoolVar[][] variables = new BoolVar[2][];
         variables[0] = new BoolVar[p.getY() * (p.getX()+1)];
-        System.out.println(variables[0].length);
+        ////////System.out.println(variables[0].length);
         variables[1] = new BoolVar[p.getX() * (p.getY()+1)];
-        System.out.println(variables[1].length);
+        //////////System.out.println(variables[1].length);
         model = new Model();
         
         // Horizontal edges
@@ -54,7 +54,7 @@ public class SATModel {
                 switch(p.getCells()[i][j]) {
                     case 0:
                         model.sum(new BoolVar[]{x0,x1,y0,y1}, "=", 0).post();
-                        //System.out.println("adding 0 for "+i+","+j+": "+x0.getName()+","+x1.getName()+","+y0.getName()+","+y1.getName());
+                        ////////////System.out.println("adding 0 for "+i+","+j+": "+x0.getName()+","+x1.getName()+","+y0.getName()+","+y1.getName());
                         break;
                     case 1:
                         model.sum(new BoolVar[]{x0,x1,y0,y1}, "=", 1).post();
@@ -76,7 +76,7 @@ public class SATModel {
         // xor on preceding and folowing edges for every true edge.
         // Begin with the horizontal edges
         for(int i=0; i<variables[0].length; i++) {
-            System.out.println("checking var "+variables[0][i].getName());
+            //////////System.out.println("checking var "+variables[0][i].getName());
             // upper edges
             if(i < p.getY()) {
                 // left extremity
@@ -84,7 +84,7 @@ public class SATModel {
                     BoolVar[] left = {variables[1][i]};
                     BoolVar[] right = {variables[0][i+1], variables[1][i+1]};
                     
-                    System.out.println("upper left, "+variables[0][i].getName()+": left={"+variables[1][i].getName()+"}, right={"+variables[0][i+1].getName()+", "+variables[1][i+1].getName()+"}");
+                    ////////System.out.println("upper left, "+variables[0][i].getName()+": left={"+variables[1][i].getName()+"}, right={"+variables[0][i+1].getName()+", "+variables[1][i+1].getName()+"}");
                     model.ifThen(variables[0][i], model.and(model.sum(left, "=", model.intVar(1)), model.sum(right, "=", model.intVar(1))));
                 }
                 else if (i%p.getY() == p.getY()-1) { // right extremity
@@ -120,7 +120,7 @@ public class SATModel {
                     BoolVar[] left = {variables[0][i-1], variables[1][maxLine+col]};
                     BoolVar[] right = {variables[0][i+1], variables[1][maxLine+col+1]};
                     
-                    System.out.println("lower middle, "+variables[0][i].getName()+": left={"+variables[0][i-1].getName()+", "+variables[1][maxLine+col].getName()+"}, right={"+variables[0][i+1].getName()+", "+variables[1][maxLine+col+1].getName()+"}");
+                    ////////System.out.println("lower middle, "+variables[0][i].getName()+": left={"+variables[0][i-1].getName()+", "+variables[1][maxLine+col].getName()+"}, right={"+variables[0][i+1].getName()+", "+variables[1][maxLine+col+1].getName()+"}");
                     model.ifThen(variables[0][i], model.and(model.sum(left, "=", model.intVar(1)), model.sum(right, "=", model.intVar(1))));
                 }
             } else { 
@@ -132,7 +132,7 @@ public class SATModel {
                     BoolVar[] left = {variables[1][tmp], variables[1][tmp+p.getY()+1]};
                     BoolVar[] right = {variables[0][i+1], variables[1][tmp+1], variables[1][tmp+p.getY()+2]};
                     
-                    System.out.println("middle left, "+variables[0][i].getName()+": left={"+variables[1][tmp].getName()+", "+variables[1][tmp+p.getY()+1].getName()+"}, right={"+variables[0][i+1].getName()+", "+variables[1][tmp+1].getName()+", "+variables[1][tmp+p.getY()+2].getName()+"}");
+                    ////////System.out.println("middle left, "+variables[0][i].getName()+": left={"+variables[1][tmp].getName()+", "+variables[1][tmp+p.getY()+1].getName()+"}, right={"+variables[0][i+1].getName()+", "+variables[1][tmp+1].getName()+", "+variables[1][tmp+p.getY()+2].getName()+"}");
                     model.ifThen(variables[0][i], model.and(model.sum(left, "=", model.intVar(1)), model.sum(right, "=", model.intVar(1))));
                 }
                 else if (i%p.getY() == p.getY()-1) { // right extremity

@@ -11,6 +11,12 @@ import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solution;
 import org.chocosolver.solver.explanations.ExplanationEngine;
 import org.chocosolver.solver.search.loop.monitors.IMonitorOpenNode;
+import org.chocosolver.solver.search.strategy.BoundSearch;
+import org.chocosolver.solver.search.strategy.Search;
+import org.chocosolver.solver.search.strategy.assignments.DecisionOperator;
+import org.chocosolver.solver.search.strategy.selectors.values.IntDomainMax;
+import org.chocosolver.solver.search.strategy.selectors.values.IntDomainMin;
+import org.chocosolver.solver.search.strategy.selectors.variables.FirstFail;
 import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.variables.IntVar;
 
@@ -161,20 +167,19 @@ public class BoxBasedSolver
             }
         }
         
-        
-        
-        sol = model.getSolver().findSolution();
-        /*if(sol == null)
-            System.out.println("NO SOL");
-        else
-            for(int i = 0; i < sl.getX(); i++)
+
+        IntVar[] varsFlattened = new IntVar[sl.getX() * sl.getY()];
+        for(int i = 0; i < sl.getX(); i++)
+        {
+            for(int j = 0; j < sl.getY(); j ++)
             {
-                for(int j = 0; j < sl.getY(); j++)
-                {
-                    //System.out.println("B" + i + ", " + j + ": " + sol.getIntVal(vars[i][j]));
-                }
+                varsFlattened[i*sl.getX() + j] = vars[i][j];
             }
-        */
+        }
+        model.getSolver().setSearch(Search.intVarSearch(new FirstFail(model), new IntDomainMax(),varsFlattened));
+        //System.out.println(model.getCstrs().length);
+        sol = model.getSolver().findSolution();
+        
         
         return sol;
     }
